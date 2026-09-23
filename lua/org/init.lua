@@ -14,6 +14,8 @@ local Cheatsheet = require("org.cheatsheet")
 
 local M = {}
 
+M.version = "0.1.0-beta"
+
 M.config = Config
 M.dom = DOM
 M.fold = Fold

@@ -1,4 +1,4 @@
-# org.nvim
+# Neovim Org Mode Emulation Plugin (v0.1.0-beta)
 
 Full Emacs Org Mode for Neovim written from scratch in pure, idiomatic Lua.
 

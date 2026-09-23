@@ -36,14 +36,28 @@ local function setup_buffer_mappings(bufnr)
 	end
 
 	local m = Config.options.mappings.org
-	map("n", m.org_cycle, Fold.cycle, "Cycle Subtree Fold")
+	local function handle_tab()
+		local lnum = vim.fn.line(".")
+		local s, e = Table.find_table_bounds(0, lnum)
+		if s and e then
+			Table.next_cell()
+		else
+			Fold.cycle()
+		end
+	end
+
+	if m.org_cycle == m.org_table_align then
+		map("n", m.org_cycle, handle_tab, "Tab: Next Table Cell / Cycle Fold")
+	else
+		map("n", m.org_cycle, Fold.cycle, "Cycle Subtree Fold")
+		map("n", m.org_table_align, Table.next_cell, "Next Table Cell / Align")
+	end
 	map("n", m.org_global_cycle, Fold.global_cycle, "Cycle Global Folds")
 	map("n", m.org_todo, Todo.cycle, "Cycle TODO State")
 	map("n", m.org_priority_up, Todo.priority_up, "Increase Priority")
 	map("n", m.org_priority_down, Todo.priority_down, "Decrease Priority")
 	map("n", m.org_toggle_checkbox, List.toggle_checkbox, "Toggle Checkbox")
 	map("n", m.org_open_at_point, Link.open_at_point, "Open Link at Point")
-	map("n", m.org_table_align, Table.next_cell, "Next Table Cell / Align")
 	map("n", m.org_table_eval_formula, Table.recalculate, "Eval Table Formula")
 	map("n", m.org_babel_execute, Babel.execute_at_point, "Execute Source Block")
 	map("n", m.org_babel_tangle, Babel.tangle_file, "Tangle Document Blocks")

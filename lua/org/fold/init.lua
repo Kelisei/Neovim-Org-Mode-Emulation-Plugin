@@ -17,52 +17,34 @@ end
 --- Cycle folding state of the subtree under cursor (FOLDED -> CHILDREN -> SUBTREE).
 function M.cycle()
 	local lnum = vim.fn.line(".")
-	local line = vim.fn.getline(lnum)
-	local is_headline = line:match("^(%*+)%s+")
-
-	if not is_headline then
-		local foldlevel = vim.fn.foldlevel(lnum)
-		if foldlevel > 0 then
-			vim.cmd("normal! za")
-		end
-		return
-	end
-
-	local foldclosed = vim.fn.foldclosed(lnum)
-	if foldclosed ~= -1 then
-		vim.cmd("normal! zo")
-		local root = DOM.get(0)
-		local node = DOM.find_headline_at_line(root, lnum)
-		if node and #node.children > 0 then
-			for _, child in ipairs(node.children) do
-				local start = child.range.start_line
-				if vim.fn.foldclosed(start) == -1 then
-					vim.cmd(string.format("%d,%dfoldclose", start, child.range.end_line))
-				end
-			end
-		end
-		return
-	end
-
 	local root = DOM.get(0)
 	local node = DOM.find_headline_at_line(root, lnum)
+
 	if not node then
-		vim.cmd("normal! za")
+		vim.cmd("silent! normal! za")
 		return
 	end
 
-	local any_child_open = false
-	for _, child in ipairs(node.children) do
-		if vim.fn.foldclosed(child.range.start_line) == -1 then
-			any_child_open = true
+	local start_lnum = node.range.start_line
+	local end_lnum = node.range.end_line
+
+	if vim.fn.foldclosed(start_lnum) ~= -1 then
+		vim.cmd("normal! zo")
+		return
+	end
+
+	local any_closed = false
+	for l = start_lnum + 1, end_lnum do
+		if vim.fn.foldclosed(l) ~= -1 then
+			any_closed = true
 			break
 		end
 	end
 
-	if any_child_open then
-		vim.cmd("normal! zc")
+	if any_closed then
+		vim.cmd(string.format("silent! %d,%dfoldopen!", start_lnum, end_lnum))
 	else
-		vim.cmd("normal! zO")
+		vim.cmd("normal! zc")
 	end
 end
 
@@ -90,6 +72,7 @@ function M.attach(bufnr)
 		vim.opt_local.foldmethod = "expr"
 		vim.opt_local.foldexpr = "v:lua.require'org.fold'.foldexpr(v:lnum)"
 		vim.opt_local.foldenable = true
+		vim.opt_local.foldopen = "search,quickfix"
 		vim.b.org_global_fold_state = "overview"
 	end)
 end

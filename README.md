@@ -100,7 +100,7 @@ Full Emacs Org Mode for Neovim written from scratch in pure, idiomatic Lua.
 | `<Tab>` | Headline | Cycle subtree fold (`FOLDED` -> `CHILDREN` -> `SUBTREE`) |
 | `<S-Tab>` | Normal | Cycle buffer folds (`OVERVIEW` -> `CONTENTS` -> `ALL`) |
 | `t` | Headline | Cycle TODO state forward |
-| `P` | Headline | Cycle priority (`C` -> `B` -> `A` -> none) |
+| `op` | Headline | Cycle priority (`C` -> `B` -> `A` -> none) |
 | `<leader>op` | Headline | Fast interactive priority picker |
 | `<C-c><C-c>` | List | Toggle checkbox (`[ ]` <-> `[X]`) and refresh cookies |
 | `<CR>` | Normal | Follow link under cursor / Jump in Agenda |

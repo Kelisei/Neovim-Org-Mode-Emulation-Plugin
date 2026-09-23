@@ -100,8 +100,8 @@ Full Emacs Org Mode for Neovim written from scratch in pure, idiomatic Lua.
 | `<Tab>` | Headline | Cycle subtree fold (`FOLDED` -> `CHILDREN` -> `SUBTREE`) |
 | `<S-Tab>` | Normal | Cycle buffer folds (`OVERVIEW` -> `CONTENTS` -> `ALL`) |
 | `t` | Headline | Cycle TODO state forward |
-| `<C-Up>` | Headline | Increase priority (`C` -> `B` -> `A`) |
-| `<C-Down>` | Headline | Decrease priority (`A` -> `B` -> `C`) |
+| `P` | Headline | Cycle priority (`C` -> `B` -> `A` -> none) |
+| `<leader>op` | Headline | Fast interactive priority picker |
 | `<C-c><C-c>` | List | Toggle checkbox (`[ ]` <-> `[X]`) and refresh cookies |
 | `<CR>` | Normal | Follow link under cursor / Jump in Agenda |
 | `<Tab>` | Table | Jump to next cell and re-align table |
@@ -128,6 +128,7 @@ Full Emacs Org Mode for Neovim written from scratch in pure, idiomatic Lua.
 - `:OrgSchedule` - Set or edit scheduled date.
 - `:OrgDeadline` - Set or edit deadline date.
 - `:OrgTodoPrompt` - Fast interactive TODO state picker.
+- `:OrgPriority` - Set or prompt priority picker.
 
 ---
 

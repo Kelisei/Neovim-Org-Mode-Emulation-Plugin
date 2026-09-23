@@ -28,7 +28,7 @@ function M.apply_buffer_syntax(bufnr)
 	vim.api.nvim_buf_call(bufnr, function()
 		M.setup_syntax()
 
-		vim.cmd([[
+		vim.cmd([=[
 			syntax match OrgHeadlineLevel1 "^\*\s\+.*$" contains=OrgTodo,OrgDone,OrgPriority,OrgTag
 			syntax match OrgHeadlineLevel2 "^\*\*\{1\}\s\+.*$" contains=OrgTodo,OrgDone,OrgPriority,OrgTag
 			syntax match OrgHeadlineLevel3 "^\*\*\{2\}\s\+.*$" contains=OrgTodo,OrgDone,OrgPriority,OrgTag
@@ -49,7 +49,7 @@ function M.apply_buffer_syntax(bufnr)
 			syntax match OrgStrike "+[^\+\t\n\r ]\+[^\+]*+"
 			syntax match OrgCode "\~[^~\t\n\r ]\+[^~]*\~"
 			syntax match OrgVerbatim "=[^=\t\n\r ]\+[^=]*="
-		]])
+		]=])
 	end)
 end
 

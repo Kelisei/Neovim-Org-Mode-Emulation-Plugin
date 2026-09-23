@@ -102,10 +102,10 @@ Full Emacs Org Mode for Neovim written from scratch in pure, idiomatic Lua.
 | `t` | Headline | Cycle TODO state forward |
 | `op` | Headline | Cycle priority (`C` -> `B` -> `A` -> none) |
 | `<leader>op` | Headline | Fast interactive priority picker |
-| `<C-c><C-c>` | List | Toggle checkbox (`[ ]` <-> `[X]`) and refresh cookies |
-| `<CR>` | Normal | Follow link under cursor / Jump in Agenda |
+| `<C-c><C-c>` | Context | Toggle checkbox / Recalculate table formulas |
+| `<CR>` | Context | Follow link under cursor / Recalculate table on `#+TBLFM:` |
 | `<Tab>` | Table | Jump to next cell and re-align table |
-| `<leader>tfe` | Table | Evaluate table formulas (`#+TBLFM:`) |
+| `<leader>tfe` / `<leader>of` | Table | Evaluate table formulas (`#+TBLFM:`) |
 | `<leader>oe` | Source Block | Execute code block (Org Babel) |
 | `<leader>ot` | Normal | Tangle code blocks to disk |
 | `<leader>os` | Headline | Set scheduled date |

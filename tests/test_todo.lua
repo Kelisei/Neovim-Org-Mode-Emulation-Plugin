@@ -36,6 +36,13 @@ function M.run()
 	assert(found_done, "State transition to DONE failed")
 	assert(found_closed, "CLOSED timestamp insertion failed")
 
+	local count_before = #lines
+	local last_line_before = lines[count_before]
+	State.cycle(bufnr, count_before)
+	local lines_after = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+	assert(#lines_after == count_before, "Line count should not change when cycling non-headline")
+	assert(lines_after[count_before] == last_line_before, "Non-headline line should not be modified")
+
 	vim.api.nvim_buf_delete(bufnr, { force = true })
 	return true, "Todo tests passed"
 end

@@ -243,16 +243,12 @@ function M.cycle(bufnr, headline_lnum)
 	headline_lnum = headline_lnum or vim.fn.line(".")
 
 	local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-	local target_lnum = nil
-	for i = headline_lnum, 1, -1 do
-		if lines[i]:match("^(%*+)%s+") then
-			target_lnum = i
-			break
-		end
-	end
-	if not target_lnum then
+	local current_line = lines[headline_lnum]
+	if not current_line or not current_line:match("^(%*+)%s+") then
 		return
 	end
+
+	local target_lnum = headline_lnum
 
 	local line = lines[target_lnum]
 	local stars, rest = line:match("^(%*+)%s+(.*)$")

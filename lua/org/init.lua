@@ -46,6 +46,35 @@ local function setup_buffer_mappings(bufnr)
 		end
 	end
 
+	local function handle_ctrl_c_ctrl_c()
+		local lnum = vim.fn.line(".")
+		local cur = vim.api.nvim_get_current_line()
+		if cur:match("^%s*#%+TBLFM:") then
+			Table.recalculate(0, lnum)
+			return
+		end
+		if cur:match("%[[ X%-]%]") then
+			List.toggle_checkbox()
+			return
+		end
+		local s, e = Table.find_table_bounds(0, lnum)
+		if s and e then
+			Table.recalculate(0, lnum)
+			return
+		end
+		List.toggle_checkbox()
+	end
+
+	local function handle_open_at_point()
+		local lnum = vim.fn.line(".")
+		local cur = vim.api.nvim_get_current_line()
+		if cur:match("^%s*#%+TBLFM:") then
+			Table.recalculate(0, lnum)
+			return
+		end
+		Link.open_at_point()
+	end
+
 	if m.org_cycle == m.org_table_align then
 		map("n", m.org_cycle, handle_tab, "Tab: Next Table Cell / Cycle Fold")
 	else
@@ -53,12 +82,28 @@ local function setup_buffer_mappings(bufnr)
 		map("n", m.org_table_align, Table.next_cell, "Next Table Cell / Align")
 	end
 	map("n", m.org_global_cycle, Fold.global_cycle, "Cycle Global Folds")
-	map("n", m.org_todo, Todo.cycle, "Cycle TODO State")
+
+	if m.org_todo == "t" then
+		vim.keymap.set("n", m.org_todo, function()
+			local cur = vim.api.nvim_get_current_line()
+			if cur:match("^(%*+)%s+") then
+				return "<cmd>lua require('org.todo').cycle()<cr>"
+			else
+				return "t"
+			end
+		end, { expr = true, buffer = bufnr, silent = true, desc = "Cycle TODO State (Headline) / Till Motion" })
+	else
+		map("n", m.org_todo, Todo.cycle, "Cycle TODO State")
+	end
+
 	map("n", m.org_priority, Todo.priority_up, "Cycle Priority")
 	map("n", m.org_priority_prompt, Todo.prompt_priority, "Prompt Priority")
-	map("n", m.org_toggle_checkbox, List.toggle_checkbox, "Toggle Checkbox")
-	map("n", m.org_open_at_point, Link.open_at_point, "Open Link at Point")
+	map("n", m.org_toggle_checkbox, handle_ctrl_c_ctrl_c, "Toggle Checkbox / Recalculate Table")
+	map("n", m.org_open_at_point, handle_open_at_point, "Open Link at Point / Recalculate Table")
 	map("n", m.org_table_eval_formula, Table.recalculate, "Eval Table Formula")
+	if m.org_table_eval_formula ~= "<leader>of" then
+		map("n", "<leader>of", Table.recalculate, "Eval Table Formula (Org Formula)")
+	end
 	map("n", m.org_babel_execute, Babel.execute_at_point, "Execute Source Block")
 	map("n", m.org_babel_tangle, Babel.tangle_file, "Tangle Document Blocks")
 	map("n", m.org_schedule, Date.prompt_scheduled, "Set Scheduled Date")

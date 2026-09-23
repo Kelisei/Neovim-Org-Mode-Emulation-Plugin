@@ -14,7 +14,21 @@ function M.find_table_bounds(bufnr, lnum)
 		return nil, nil, nil, nil
 	end
 
-	if not lines[lnum]:match("^%s*|") and not lines[lnum]:match("^%s*#%+TBLFM:") then
+	if lines[lnum]:match("^%s*#%+TBLFM:") then
+		local tblfm_line = lines[lnum]:match("^%s*#%+TBLFM:%s*(.*)$")
+		local tblfm_lnum = lnum
+		local end_line = lnum - 1
+		if end_line < 1 or not lines[end_line]:match("^%s*|") then
+			return nil, nil, nil, nil
+		end
+		local start_line = end_line
+		while start_line > 1 and lines[start_line - 1]:match("^%s*|") do
+			start_line = start_line - 1
+		end
+		return start_line, end_line, tblfm_line, tblfm_lnum
+	end
+
+	if not lines[lnum]:match("^%s*|") then
 		return nil, nil, nil, nil
 	end
 

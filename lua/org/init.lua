@@ -108,6 +108,7 @@ local function setup_buffer_mappings(bufnr)
 	map("n", m.org_babel_tangle, Babel.tangle_file, "Tangle Document Blocks")
 	map("n", m.org_schedule, Date.prompt_scheduled, "Set Scheduled Date")
 	map("n", m.org_deadline, Date.prompt_deadline, "Set Deadline Date")
+	map("n", m.org_add_note, Drawer.add_note, "Add Headline Note")
 end
 
 --- Attach Org Mode features to an opened Org buffer.
@@ -169,6 +170,7 @@ local function register_commands()
 	end, { desc = "Prompt fast TODO selection" })
 	safe_create_command("OrgOpenNotes", Agenda.open_notes_file, { desc = "Open default Org notes file" })
 	safe_create_command("OrgNotes", Agenda.open_notes_view, { desc = "Open Org captured notes viewer" })
+	safe_create_command("OrgAddNote", Drawer.add_note, { desc = "Add note to headline LOGBOOK drawer" })
 	safe_create_command("OrgPriority", function(opts)
 		local arg = opts.args ~= "" and opts.args or nil
 		if arg then
@@ -190,7 +192,14 @@ function M.setup(opts)
 		vim.keymap.set("n", gm.org_agenda, Agenda.open_agenda, { silent = true, desc = "Org Agenda" })
 	end
 	if gm.org_capture and gm.org_capture ~= "" then
-		vim.keymap.set("n", gm.org_capture, Agenda.capture, { silent = true, desc = "Org Capture" })
+		vim.keymap.set("n", gm.org_capture, function()
+			Agenda.capture()
+		end, { silent = true, desc = "Org Capture" })
+		vim.keymap.set("x", gm.org_capture, function()
+			vim.cmd([[normal! "vy]])
+			local visual_text = vim.fn.getreg("v")
+			Agenda.capture(visual_text)
+		end, { silent = true, desc = "Org Capture with visual selection" })
 	end
 	if gm.org_open_notes and gm.org_open_notes ~= "" then
 		vim.keymap.set("n", gm.org_open_notes, Agenda.open_notes_file, { silent = true, desc = "Org Open Notes" })

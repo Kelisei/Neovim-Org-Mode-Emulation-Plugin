@@ -42,6 +42,7 @@ M.defaults = {
 			org_babel_tangle = "<leader>ot",
 			org_schedule = "<leader>os",
 			org_deadline = "<leader>od",
+			org_add_note = "<leader>oz",
 		},
 	},
 }

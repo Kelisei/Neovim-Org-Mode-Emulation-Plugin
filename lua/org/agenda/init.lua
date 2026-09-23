@@ -286,8 +286,19 @@ function M.open_notes_view()
 	end, { buffer = buf, silent = true })
 end
 
---- Prompt for a quick note and append to the default notes file.
-function M.capture()
+--- Prompt for a quick note and append to the default notes file with context link.
+--- @param visual_text string|nil
+function M.capture(visual_text)
+	local origin_buf = vim.api.nvim_get_current_buf()
+	local origin_path = vim.api.nvim_buf_get_name(origin_buf)
+	local origin_line = vim.fn.line(".")
+	local origin_filename = vim.fn.fnamemodify(origin_path, ":t")
+
+	local context_link = nil
+	if origin_path and origin_path ~= "" and vim.fn.filereadable(origin_path) == 1 then
+		context_link = string.format("[[file:%s::%d][%s::%d]]", origin_path, origin_line, origin_filename, origin_line)
+	end
+
 	local notes_file = vim.fn.expand(Config.options.org_default_notes_file)
 	local parent_dir = vim.fn.fnamemodify(notes_file, ":h")
 	if vim.fn.isdirectory(parent_dir) == 0 then
@@ -297,7 +308,23 @@ function M.capture()
 	vim.ui.input({ prompt = "Org Capture Note: " }, function(input)
 		if input and vim.trim(input) ~= "" then
 			local ts = os.date("[%Y-%m-%d %a %H:%M]")
-			local entry = string.format("\n* %s\n  %s\n", input, ts)
+			local entry_parts = {
+				string.format("\n* %s", input),
+				string.format("  %s", ts),
+			}
+			if context_link then
+				table.insert(entry_parts, string.format("  %s", context_link))
+			end
+			if visual_text and vim.trim(visual_text) ~= "" then
+				table.insert(entry_parts, "  #+BEGIN_QUOTE")
+				for _, vl in ipairs(vim.split(vim.trim(visual_text), "\n")) do
+					table.insert(entry_parts, "  " .. vl)
+				end
+				table.insert(entry_parts, "  #+END_QUOTE")
+			end
+			table.insert(entry_parts, "")
+
+			local entry = table.concat(entry_parts, "\n")
 			local f = io.open(notes_file, "a")
 			if f then
 				f:write(entry)

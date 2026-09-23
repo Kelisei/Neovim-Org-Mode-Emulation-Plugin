@@ -121,7 +121,12 @@ function M.open_at_point()
 
 		vim.cmd("edit " .. vim.fn.fnameescape(file_path))
 		if target then
-			if target:match("^%*(.*)$") then
+			local target_lnum = tonumber(target)
+			if target_lnum then
+				local total = vim.api.nvim_buf_line_count(0)
+				vim.api.nvim_win_set_cursor(0, { math.min(math.max(1, target_lnum), total), 0 })
+				return
+			elseif target:match("^%*(.*)$") then
 				local heading = target:match("^%*(.*)$")
 				local root = DOM.get(0)
 				local headlines = DOM.find_all_headlines(root)

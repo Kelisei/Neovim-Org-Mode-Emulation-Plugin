@@ -164,6 +164,75 @@ function M.clock_out(bufnr, headline_lnum)
 	end
 end
 
+--- Add a timestamped note to the LOGBOOK drawer of the current headline.
+--- @param bufnr number|nil
+--- @param headline_lnum number|nil
+--- @param note_text string|nil
+function M.add_note(bufnr, headline_lnum, note_text)
+	bufnr = bufnr or vim.api.nvim_get_current_buf()
+	headline_lnum = headline_lnum or vim.fn.line(".")
+
+	local root = DOM.get(bufnr)
+	local node = DOM.find_headline_at_line(root, headline_lnum)
+	if not node then
+		vim.notify("Org: Cursor is not under a headline", vim.log.levels.WARN)
+		return
+	end
+
+	local function do_insert(text)
+		if not text or vim.trim(text) == "" then
+			return
+		end
+
+		local target_lnum = node.range.start_line
+		local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+		local d_start = nil
+		local i = target_lnum + 1
+		while i <= #lines do
+			if lines[i]:match("^(%*+)%s+") then
+				break
+			end
+			if lines[i]:match("^%s*:LOGBOOK:%s*$") then
+				d_start = i
+				break
+			end
+			i = i + 1
+		end
+
+		local ts = State.format_timestamp(false, true)
+		local entry_lines = {
+			string.format('  - Note taken on %s \\\\', ts),
+			string.format('    %s', vim.trim(text)),
+		}
+
+		if d_start then
+			vim.api.nvim_buf_set_lines(bufnr, d_start, d_start, false, entry_lines)
+		else
+			local insert_pos = target_lnum
+			if lines[target_lnum + 1] and (lines[target_lnum + 1]:match("SCHEDULED:") or lines[target_lnum + 1]:match("DEADLINE:") or lines[target_lnum + 1]:match("CLOSED:")) then
+				insert_pos = target_lnum + 1
+			end
+			local drawer = {
+				"  :LOGBOOK:",
+				entry_lines[1],
+				entry_lines[2],
+				"  :END:",
+			}
+			vim.api.nvim_buf_set_lines(bufnr, insert_pos, insert_pos, false, drawer)
+		end
+		DOM.invalidate(bufnr)
+		vim.notify("Org: Note added to headline LOGBOOK", vim.log.levels.INFO)
+	end
+
+	if note_text then
+		do_insert(note_text)
+	else
+		vim.ui.input({ prompt = "Headline Note: " }, function(input)
+			do_insert(input)
+		end)
+	end
+end
+
 M.set_property = Properties.set_property
 M.get_property = Properties.get_property
 M.remove_property = Properties.remove_property

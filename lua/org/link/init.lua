@@ -91,12 +91,25 @@ function M.open_at_point()
 	if uri:match("^#") then
 		local custom_id = uri:sub(2)
 		local root = DOM.get(0)
-		local match = DOM.find_by_custom_id(root, custom_id)
+		local match = DOM.find_by_custom_id(root, custom_id) or DOM.find_by_id(root, custom_id)
 		if match then
 			vim.api.nvim_win_set_cursor(0, { match.range.start_line, 0 })
-		else
-			vim.notify("Org: Custom ID not found: " .. custom_id, vim.log.levels.WARN)
+			return
 		end
+
+		if jump_to_anchor(0, custom_id) then
+			return
+		end
+
+		local headlines = DOM.find_all_headlines(root)
+		for _, hl in ipairs(headlines) do
+			if hl.title:lower() == custom_id:lower() then
+				vim.api.nvim_win_set_cursor(0, { hl.range.start_line, 0 })
+				return
+			end
+		end
+
+		vim.notify("Org: Target not found for link: " .. uri, vim.log.levels.WARN)
 		return
 	end
 

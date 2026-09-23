@@ -54,6 +54,7 @@ local function setup_buffer_mappings(bufnr)
 	end
 	map("n", m.org_global_cycle, Fold.global_cycle, "Cycle Global Folds")
 	map("n", m.org_todo, Todo.cycle, "Cycle TODO State")
+	map("n", m.org_priority_prompt, Todo.prompt_priority, "Prompt Priority")
 	map("n", m.org_priority_up, Todo.priority_up, "Increase Priority")
 	map("n", m.org_priority_down, Todo.priority_down, "Decrease Priority")
 	map("n", m.org_toggle_checkbox, List.toggle_checkbox, "Toggle Checkbox")
@@ -74,17 +75,20 @@ function M.attach(bufnr)
 	setup_buffer_mappings(bufnr)
 end
 
+M._registered_commands = {}
+
 --- Register user command with duplicate warning.
 --- @param name string
 --- @param command any
 --- @param opts table
 local function safe_create_command(name, command, opts)
-	if vim.fn.exists(":" .. name) == 2 then
+	if vim.fn.exists(":" .. name) == 2 and not M._registered_commands[name] then
 		vim.notify(
 			string.format("org.nvim: User command :%s already exists and will be overwritten", name),
 			vim.log.levels.WARN
 		)
 	end
+	M._registered_commands[name] = true
 	vim.api.nvim_create_user_command(name, command, opts)
 end
 
@@ -119,6 +123,14 @@ local function register_commands()
 	safe_create_command("OrgTodoPrompt", function()
 		Todo.prompt_state(0, vim.fn.line("."))
 	end, { desc = "Prompt fast TODO selection" })
+	safe_create_command("OrgPriority", function(opts)
+		local arg = opts.args ~= "" and opts.args or nil
+		if arg then
+			Todo.set_priority(0, vim.fn.line("."), arg)
+		else
+			Todo.prompt_priority(0, vim.fn.line("."))
+		end
+	end, { nargs = "?", desc = "Set or prompt priority for headline" })
 end
 
 --- Setup the org.nvim plugin with user configuration.

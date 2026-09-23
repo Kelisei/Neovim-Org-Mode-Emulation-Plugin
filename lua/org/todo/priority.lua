@@ -129,4 +129,45 @@ function M.cycle_down(bufnr, headline_lnum)
 	M.set_priority(bufnr, target_lnum, next_prio)
 end
 
+--- Prompt interactive priority picker for current headline.
+--- @param bufnr number|nil
+--- @param headline_lnum number|nil
+function M.prompt_priority(bufnr, headline_lnum)
+	bufnr = bufnr or vim.api.nvim_get_current_buf()
+	headline_lnum = headline_lnum or vim.fn.line(".")
+
+	local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+	local target_lnum = nil
+	for i = headline_lnum, 1, -1 do
+		if lines[i]:match("^(%*+)%s+") then
+			target_lnum = i
+			break
+		end
+	end
+	if not target_lnum then
+		return
+	end
+
+	local items = {
+		"[A] Priority A (Highest)",
+		"[B] Priority B (Medium)",
+		"[C] Priority C (Lowest)",
+		"[ ] Clear Priority",
+	}
+
+	vim.ui.select(items, { prompt = "Select Priority:" }, function(choice)
+		if not choice then
+			return
+		end
+		if choice == "[ ] Clear Priority" then
+			M.set_priority(bufnr, target_lnum, nil)
+		else
+			local p = choice:match("%[([A-Za-z])%]")
+			if p then
+				M.set_priority(bufnr, target_lnum, p)
+			end
+		end
+	end)
+end
+
 return M

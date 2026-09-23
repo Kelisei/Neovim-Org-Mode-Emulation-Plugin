@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Headless Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Neovim
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: stable
+
+      - name: Setup Python Runtime for Babel tests
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Execute test runner
+        run: |
+          nvim --headless -u NONE --cmd "set rtp+=." -l tests/run_tests.lua

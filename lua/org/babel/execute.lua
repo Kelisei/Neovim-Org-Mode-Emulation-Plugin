@@ -39,6 +39,13 @@ end
 local function prepare_script(lang, code_lines, vars)
 	local prefix = {}
 	local norm_lang = lang:lower()
+	local has_return = false
+	for _, l in ipairs(code_lines) do
+		if l:match("^%s*return%s*") or l:match("^%s*return$") then
+			has_return = true
+			break
+		end
+	end
 
 	if norm_lang == "python" or norm_lang == "python3" then
 		for k, v in pairs(vars) do
@@ -48,6 +55,35 @@ local function prepare_script(lang, code_lines, vars)
 				local clean_v = v:gsub('"', '\\"')
 				table.insert(prefix, string.format('%s = "%s"', k, clean_v))
 			end
+		end
+
+		if has_return then
+			local indented = {}
+			for _, cl in ipairs(code_lines) do
+				table.insert(indented, "    " .. cl)
+			end
+			local wrapper = {
+				"",
+				"def __org_babel_python_main():",
+				table.concat(indented, "\n"),
+				"",
+				"__org_babel_res = __org_babel_python_main()",
+				"if __org_babel_res is not None:",
+				"    if isinstance(__org_babel_res, (list, tuple)):",
+				"        for row in __org_babel_res:",
+				"            if isinstance(row, (list, tuple)):",
+				'                print("| " + " | ".join(str(c) for c in row) + " |")',
+				"            else:",
+				'                print("| " + str(row) + " |")',
+				"    else:",
+				"        print(__org_babel_res)",
+			}
+			local full_code = table.concat(prefix, "\n")
+			if #prefix > 0 then
+				full_code = full_code .. "\n"
+			end
+			full_code = full_code .. table.concat(wrapper, "\n")
+			return full_code
 		end
 	elseif norm_lang == "bash" or norm_lang == "sh" then
 		for k, v in pairs(vars) do
@@ -60,6 +96,126 @@ local function prepare_script(lang, code_lines, vars)
 			else
 				table.insert(prefix, string.format('local %s = %q', k, v))
 			end
+		end
+
+		if has_return then
+			local indented = {}
+			for _, cl in ipairs(code_lines) do
+				table.insert(indented, "    " .. cl)
+			end
+			local wrapper = {
+				"",
+				"local function __org_babel_lua_main()",
+				table.concat(indented, "\n"),
+				"end",
+				"",
+				"local __org_babel_res = __org_babel_lua_main()",
+				"if __org_babel_res ~= nil then",
+				'    if type(__org_babel_res) == "table" then',
+				"        for _, row in ipairs(__org_babel_res) do",
+				'            if type(row) == "table" then',
+				"                local parts = {}",
+				"                for _, c in ipairs(row) do table.insert(parts, tostring(c)) end",
+				'                print("| " .. table.concat(parts, " | ") .. " |")',
+				"            else",
+				'                print("| " .. tostring(row) .. " |")',
+				"            end",
+				"        end",
+				"    else",
+				"        print(tostring(__org_babel_res))",
+				"    end",
+				"end",
+			}
+			local full_code = table.concat(prefix, "\n")
+			if #prefix > 0 then
+				full_code = full_code .. "\n"
+			end
+			full_code = full_code .. table.concat(wrapper, "\n")
+			return full_code
+		end
+	elseif norm_lang == "ruby" then
+		for k, v in pairs(vars) do
+			if tonumber(v) then
+				table.insert(prefix, string.format("%s = %s", k, v))
+			else
+				table.insert(prefix, string.format('%s = %q', k, v))
+			end
+		end
+
+		if has_return then
+			local indented = {}
+			for _, cl in ipairs(code_lines) do
+				table.insert(indented, "    " .. cl)
+			end
+			local wrapper = {
+				"",
+				"def __org_babel_rb_main",
+				table.concat(indented, "\n"),
+				"end",
+				"",
+				"__org_babel_res = __org_babel_rb_main",
+				"if !__org_babel_res.nil?",
+				"    if __org_babel_res.is_a?(Array)",
+				"        __org_babel_res.each do |row|",
+				"            if row.is_a?(Array)",
+				'                puts "| " + row.map(&:to_s).join(" | ") + " |"',
+				"            else",
+				'                puts "| " + row.to_s + " |"',
+				"            end",
+				"        end",
+				"    else",
+				"        puts __org_babel_res",
+				"    end",
+				"end",
+			}
+			local full_code = table.concat(prefix, "\n")
+			if #prefix > 0 then
+				full_code = full_code .. "\n"
+			end
+			full_code = full_code .. table.concat(wrapper, "\n")
+			return full_code
+		end
+	elseif norm_lang == "javascript" or norm_lang == "node" then
+		for k, v in pairs(vars) do
+			if tonumber(v) then
+				table.insert(prefix, string.format("const %s = %s;", k, v))
+			else
+				table.insert(prefix, string.format('const %s = %q;', k, v))
+			end
+		end
+
+		if has_return then
+			local indented = {}
+			for _, cl in ipairs(code_lines) do
+				table.insert(indented, "    " .. cl)
+			end
+			local wrapper = {
+				"",
+				"function __org_babel_js_main() {",
+				table.concat(indented, "\n"),
+				"}",
+				"",
+				"const __org_babel_res = __org_babel_js_main();",
+				"if (__org_babel_res !== undefined && __org_babel_res !== null) {",
+				"    if (Array.isArray(__org_babel_res)) {",
+				"        for (const row of __org_babel_res) {",
+				"            if (Array.isArray(row)) {",
+				'                console.log("| " + row.join(" | ") + " |");',
+				"            } else {",
+				'                console.log("| " + row + " |");',
+				"            }",
+				"        }",
+				"    } else {",
+				"        console.log(__org_babel_res);",
+				"    }",
+				"}",
+			}
+			local full_code = table.concat(prefix, "\n")
+			if #prefix > 0 then
+				full_code = full_code .. "\n"
+			end
+			full_code = full_code .. table.concat(wrapper, "\n")
+			return full_code
 		end
 	end
 
@@ -79,7 +235,9 @@ local function format_as_org_table(raw_output)
 	local rows = {}
 	for _, l in ipairs(lines) do
 		local trimmed = vim.trim(l)
-		if trimmed:match("^%[.*%]$") then
+		if trimmed:match("^%s*|.*|%s*$") then
+			table.insert(rows, trimmed)
+		elseif trimmed:match("^%[.*%]$") then
 			local inner = trimmed:sub(2, -2)
 			local cells = {}
 			for item in string.gmatch(inner, "([^,]+)") do
@@ -130,16 +288,17 @@ function M.run(lang, code_lines, header_args)
 	local res = vim.system(cmd_parts, { text = true }):wait(10000)
 	os.remove(tmp_file)
 
-	local raw_out = res.stdout or ""
-	if res.stderr and res.stderr ~= "" then
-		if raw_out ~= "" then
-			raw_out = raw_out .. "\n" .. res.stderr
-		else
-			raw_out = res.stderr
+	if res.code ~= 0 then
+		local err_msg = (res.stderr and res.stderr ~= "") and res.stderr or (res.stdout or "")
+		local out_lines = vim.split(vim.trim(err_msg), "\n")
+		local formatted = {}
+		for _, ol in ipairs(out_lines) do
+			table.insert(formatted, ": " .. ol)
 		end
+		return false, formatted
 	end
 
-	raw_out = vim.trim(raw_out)
+	local raw_out = vim.trim(res.stdout or "")
 	local results_mode = header_args.results or "output"
 
 	if results_mode == "silent" then

@@ -16,6 +16,20 @@ function M.run()
 	assert(ok, "Babel python execution failed")
 	assert(out[1] == ": 50", "Babel python output mismatch: " .. tostring(out[1]))
 
+	local py_table_lines = {
+		'data = [["Item", "Value"], ["Alpha", 1 * int(multiplier)], ["Beta", 2 * int(multiplier)]]',
+		"return data",
+	}
+	local t_ok, t_out = Execute.run("python", py_table_lines, {
+		results = "table",
+		vars = { multiplier = "10" },
+	})
+	assert(t_ok, "Babel python table execution failed")
+	assert(#t_out == 3, "Expected 3 table rows, got " .. #t_out)
+	assert(t_out[1]:find("Item"), "Row 1 mismatch: " .. t_out[1])
+	assert(t_out[2]:find("10"), "Row 2 mismatch: " .. t_out[2])
+	assert(t_out[3]:find("20"), "Row 3 mismatch: " .. t_out[3])
+
 	local bash_lines = {
 		'echo "hello $name"',
 	}

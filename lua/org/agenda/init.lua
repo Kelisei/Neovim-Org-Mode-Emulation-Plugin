@@ -116,6 +116,24 @@ function M.open_agenda()
 		end
 	end
 
+	local note_items = M.collect_notes_items()
+	if #note_items > 0 then
+		table.insert(lines, "")
+		table.insert(lines, "  RECENT NOTES / REFILE:")
+		table.insert(lines, "  " .. string.rep("-", 40))
+		for _, ni in ipairs(note_items) do
+			local todo_str = ni.todo ~= "" and string.format("%-8s ", ni.todo) or ""
+			local display_line
+			if ni.snippet ~= "" then
+				display_line = string.format("  * %s%-30s  %s", todo_str, ni.title, ni.snippet)
+			else
+				display_line = string.format("  * %s%s", todo_str, ni.title)
+			end
+			table.insert(lines, display_line)
+			line_to_item[#lines] = ni
+		end
+	end
+
 	table.insert(lines, "")
 	table.insert(lines, "  [Enter] Jump to item   [q] Close agenda")
 
@@ -125,7 +143,7 @@ function M.open_agenda()
 	vim.cmd("botright split")
 	local win = vim.api.nvim_get_current_win()
 	vim.api.nvim_win_set_buf(win, buf)
-	vim.api.nvim_win_set_height(win, math.min(15, math.max(6, #lines + 1)))
+	vim.api.nvim_win_set_height(win, math.min(18, math.max(6, #lines + 1)))
 
 	local function jump()
 		local cur = vim.api.nvim_win_get_cursor(0)
@@ -137,6 +155,130 @@ function M.open_agenda()
 	end
 
 	vim.keymap.set("n", "<CR>", jump, { buffer = buf, silent = true })
+	vim.keymap.set("n", "q", function()
+		if vim.api.nvim_win_is_valid(win) then
+			vim.api.nvim_win_close(win, true)
+		end
+	end, { buffer = buf, silent = true })
+end
+
+--- Scan default notes file and collect captured note entries.
+--- @return table<number, table>
+function M.collect_notes_items()
+	local notes_file = vim.fn.expand(Config.options.org_default_notes_file)
+	local items = {}
+	if vim.fn.filereadable(notes_file) == 0 then
+		return items
+	end
+
+	local f = io.open(notes_file, "r")
+	if not f then
+		return items
+	end
+	local content = f:read("*a")
+	f:close()
+
+	local lines = vim.split(content, "\n")
+	local root = Parser.parse(lines, Config.options.org_todo_keywords)
+	local headlines = Query.find_all_headlines(root)
+
+	for _, hl in ipairs(headlines) do
+		local snippet = ""
+		for idx = hl.range.start_line + 1, math.min(#lines, hl.range.end_line) do
+			local cl = vim.trim(lines[idx])
+			if cl ~= "" and not cl:match("^:PROPERTIES:") and not cl:match("^:END:") then
+				snippet = cl
+				break
+			end
+		end
+
+		table.insert(items, {
+			file = notes_file,
+			line = hl.range.start_line,
+			title = hl.title,
+			todo = hl.todo or "",
+			snippet = snippet,
+		})
+	end
+
+	return items
+end
+
+--- Open the default notes file directly in a buffer.
+function M.open_notes_file()
+	local notes_file = vim.fn.expand(Config.options.org_default_notes_file)
+	local parent_dir = vim.fn.fnamemodify(notes_file, ":h")
+	if vim.fn.isdirectory(parent_dir) == 0 then
+		vim.fn.mkdir(parent_dir, "p")
+	end
+	if vim.fn.filereadable(notes_file) == 0 then
+		local f = io.open(notes_file, "w")
+		if f then
+			f:write("#+TITLE: Refile & Quick Notes\n\n")
+			f:close()
+		end
+	end
+	vim.cmd("edit " .. vim.fn.fnameescape(notes_file))
+end
+
+--- Render and display an interactive notes viewer window.
+function M.open_notes_view()
+	local items = M.collect_notes_items()
+	local notes_file = vim.fn.expand(Config.options.org_default_notes_file)
+	local fname = vim.fn.fnamemodify(notes_file, ":t")
+
+	local buf = vim.api.nvim_create_buf(false, true)
+	vim.bo[buf].buftype = "nofile"
+	vim.bo[buf].bufhidden = "wipe"
+	vim.bo[buf].filetype = "orgnotes"
+
+	local lines = {
+		string.format("  CAPTURED NOTES (%s)", fname),
+		"  " .. string.rep("=", 60),
+		"",
+	}
+
+	local line_to_item = {}
+
+	if #items == 0 then
+		table.insert(lines, "  No captured notes found in " .. fname .. ".")
+		table.insert(lines, "  Use :OrgCapture (<leader>oc) to add quick notes.")
+	else
+		for _, it in ipairs(items) do
+			local todo_str = it.todo ~= "" and string.format("%-8s ", it.todo) or ""
+			local display_line
+			if it.snippet ~= "" then
+				display_line = string.format("  * %s%-30s  %s", todo_str, it.title, it.snippet)
+			else
+				display_line = string.format("  * %s%s", todo_str, it.title)
+			end
+			table.insert(lines, display_line)
+			line_to_item[#lines] = it
+		end
+	end
+
+	table.insert(lines, "")
+	table.insert(lines, "  [Enter] Jump to note   [e] Edit notes file   [q] Close window")
+
+	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+	vim.bo[buf].modifiable = false
+
+	vim.cmd("botright split")
+	local win = vim.api.nvim_get_current_win()
+	vim.api.nvim_win_set_buf(win, buf)
+	vim.api.nvim_win_set_height(win, math.min(18, math.max(6, #lines + 1)))
+
+	local function jump()
+		local cur = vim.api.nvim_win_get_cursor(0)
+		local item = line_to_item[cur[1]]
+		if item then
+			vim.cmd("edit " .. vim.fn.fnameescape(item.file))
+			vim.api.nvim_win_set_cursor(0, { item.line, 0 })
+		end
+	end
+
+	vim.keymap.set("n", "<CR>", jump, { buffer = buf, silent = true })
+	vim.keymap.set("n", "e", M.open_notes_file, { buffer = buf, silent = true })
 	vim.keymap.set("n", "q", function()
 		if vim.api.nvim_win_is_valid(win) then
 			vim.api.nvim_win_close(win, true)

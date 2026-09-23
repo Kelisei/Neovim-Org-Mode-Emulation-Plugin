@@ -25,6 +25,7 @@ M.defaults = {
 		global = {
 			org_agenda = "<leader>oa",
 			org_capture = "<leader>oc",
+			org_open_notes = "<leader>on",
 		},
 		org = {
 			org_cycle = "<Tab>",

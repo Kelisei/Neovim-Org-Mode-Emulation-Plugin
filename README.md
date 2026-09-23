@@ -112,6 +112,7 @@ Full Emacs Org Mode for Neovim written from scratch in pure, idiomatic Lua.
 | `<leader>od` | Headline | Set deadline date |
 | `<leader>oa` | Global | Open Org Agenda view |
 | `<leader>oc` | Global | Quick capture note |
+| `<leader>on` | Global | Open default notes file (refile.org) |
 
 ---
 
@@ -119,6 +120,8 @@ Full Emacs Org Mode for Neovim written from scratch in pure, idiomatic Lua.
 
 - `:OrgAgenda` - Open interactive agenda view.
 - `:OrgCapture` - Prompt and append note to refile file.
+- `:OrgOpenNotes` - Open default notes file in buffer.
+- `:OrgNotes` - Open interactive captured notes viewer.
 - `:OrgExecute` - Execute source block under cursor.
 - `:OrgTangle` - Extract code blocks to configured tangle files.
 - `:OrgTableAlign` - Format and align table under cursor.

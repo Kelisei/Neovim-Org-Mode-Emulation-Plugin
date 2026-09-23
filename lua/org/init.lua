@@ -167,6 +167,8 @@ local function register_commands()
 	safe_create_command("OrgTodoPrompt", function()
 		Todo.prompt_state(0, vim.fn.line("."))
 	end, { desc = "Prompt fast TODO selection" })
+	safe_create_command("OrgOpenNotes", Agenda.open_notes_file, { desc = "Open default Org notes file" })
+	safe_create_command("OrgNotes", Agenda.open_notes_view, { desc = "Open Org captured notes viewer" })
 	safe_create_command("OrgPriority", function(opts)
 		local arg = opts.args ~= "" and opts.args or nil
 		if arg then
@@ -189,6 +191,9 @@ function M.setup(opts)
 	end
 	if gm.org_capture and gm.org_capture ~= "" then
 		vim.keymap.set("n", gm.org_capture, Agenda.capture, { silent = true, desc = "Org Capture" })
+	end
+	if gm.org_open_notes and gm.org_open_notes ~= "" then
+		vim.keymap.set("n", gm.org_open_notes, Agenda.open_notes_file, { silent = true, desc = "Org Open Notes" })
 	end
 
 	local group = vim.api.nvim_create_augroup("OrgModeNvim", { clear = true })

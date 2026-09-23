@@ -33,6 +33,27 @@ function M.run()
 	assert(items[2].title == "Client Deliverable", "Item 2 title mismatch")
 	assert(items[2].plan_type == "Deadline", "Item 2 plan type mismatch")
 
+	local tmp_notes = "/tmp/test_notes_sample.org"
+	local fn = io.open(tmp_notes, "w")
+	fn:write([[
+#+TITLE: Quick Notes
+* Call Dentist
+  [2026-09-23 Wed 11:30]
+* Buy Milk
+  [2026-09-23 Wed 11:35]
+]])
+	fn:close()
+
+	local old_notes = Config.options.org_default_notes_file
+	Config.options.org_default_notes_file = tmp_notes
+	local note_items = Agenda.collect_notes_items()
+	Config.options.org_default_notes_file = old_notes
+	os.remove(tmp_notes)
+
+	assert(#note_items == 2, "Expected 2 notes, got " .. tostring(#note_items))
+	assert(note_items[1].title == "Call Dentist", "Note 1 title mismatch")
+	assert(note_items[2].title == "Buy Milk", "Note 2 title mismatch")
+
 	return true, "Agenda tests passed"
 end
 

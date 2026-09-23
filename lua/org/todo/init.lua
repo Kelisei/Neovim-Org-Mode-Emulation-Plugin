@@ -10,6 +10,13 @@ function M.cycle(bufnr, headline_lnum)
 	State.cycle(bufnr, headline_lnum)
 end
 
+--- Regress TODO state for current headline.
+--- @param bufnr number|nil
+--- @param headline_lnum number|nil
+function M.cycle_backward(bufnr, headline_lnum)
+	State.cycle_backward(bufnr, headline_lnum)
+end
+
 --- Increase priority for current headline.
 function M.priority_up()
 	Priority.cycle_up()

@@ -27,12 +27,15 @@ M.defaults = {
 			org_agenda = "<leader>oa",
 			org_capture = "<leader>oc",
 			org_open_notes = "<leader>on",
+			org_notes = "<leader>oN",
+			org_show_cheatsheet = "<leader>o?",
 		},
 		org = {
 			org_cycle = "<Tab>",
 			org_global_cycle = "<S-Tab>",
 			org_todo = "t",
 			org_todo_prev = "T",
+			org_todo_prompt = "<leader>ott",
 			org_priority = "op",
 			org_priority_prompt = "<leader>op",
 			org_toggle_checkbox = "<C-c><C-c>",
@@ -45,7 +48,10 @@ M.defaults = {
 			org_babel_tangle = "<leader>ot",
 			org_schedule = "<leader>os",
 			org_deadline = "<leader>od",
+			org_clock_in = "<leader>oxi",
+			org_clock_out = "<leader>oxo",
 			org_add_note = "<leader>oz",
+			org_show_cheatsheet = "<leader>o?",
 		},
 	},
 }
@@ -56,7 +62,7 @@ M.options = vim.deepcopy(M.defaults)
 --- @param key string
 --- @return string
 local function normalize_key(key)
-	if key:match("^<.*>$") then
+	if type(key) == "string" and key:match("^<.*>$") then
 		return key:lower()
 	end
 	return key
@@ -75,7 +81,7 @@ function M.validate_mappings(mappings)
 
 	local org_maps = mappings.org or {}
 	for action, key in pairs(org_maps) do
-		if key and key ~= "" then
+		if type(key) == "string" and key ~= "" then
 			local norm_key = normalize_key(key)
 			if not registered[norm_key] then
 				registered[norm_key] = {}

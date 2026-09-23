@@ -99,9 +99,11 @@ Full Emacs Org Mode for Neovim written from scratch in pure, idiomatic Lua.
 | :--- | :--- | :--- |
 | `<Tab>` | Headline | Cycle subtree fold (`FOLDED` -> `CHILDREN` -> `SUBTREE`) |
 | `<S-Tab>` | Normal | Cycle buffer folds (`OVERVIEW` -> `CONTENTS` -> `ALL`) |
-| `t` | Headline | Cycle TODO state forward |
+| `t` | Headline | Cycle TODO state forward (`:OrgTodo`) |
+| `T` | Headline | Cycle TODO state backward (`:OrgTodoPrev`) |
+| `<leader>ott` | Headline | Interactive fast TODO state picker (`:OrgTodoPrompt`) |
 | `op` | Headline | Cycle priority (`C` -> `B` -> `A` -> none) |
-| `<leader>op` | Headline | Fast interactive priority picker |
+| `<leader>op` | Headline | Fast interactive priority picker (`:OrgPriorityPrompt`) |
 | `<C-c><C-c>` | Context | Toggle checkbox / Recalculate table formulas |
 | `<CR>` | Context | Follow link under cursor / Recalculate table on `#+TBLFM:` |
 | `<leader>ob` | Normal | Return to previous location after link jump (`:OrgBack`) |
@@ -112,15 +114,22 @@ Full Emacs Org Mode for Neovim written from scratch in pure, idiomatic Lua.
 | `<leader>ot` | Normal | Tangle code blocks to disk |
 | `<leader>os` | Headline | Set scheduled date |
 | `<leader>od` | Headline | Set deadline date |
+| `<leader>oxi` | Headline | Clock in on current headline (`:OrgClockIn`) |
+| `<leader>oxo` | Headline | Clock out on current headline (`:OrgClockOut`) |
 | `<leader>oz` | Headline | Add timestamped note to LOGBOOK drawer |
-| `<leader>oa` | Global | Open Org Agenda view |
-| `<leader>oc` | Global | Quick capture note with origin link and selection |
-| `<leader>on` | Global | Open default notes file (refile.org) |
+| `<leader>oa` | Global | Open Org Agenda view (`:OrgAgenda`) |
+| `<leader>oc` | Global | Quick capture note with origin link and selection (`:OrgCapture`) |
+| `<leader>on` | Global | Open default notes file (`:OrgOpenNotes`) |
+| `<leader>oN` | Global | Open captured notes interactive viewer (`:OrgNotes`) |
+| `<leader>o?` | Global/Org | Open interactive cheatsheet & keymaps popup (`:OrgShowCheatsheet`) |
+
+Every single binding above can be customized or disabled (by setting to `false` or `""`) in your `setup({ mappings = { global = { ... }, org = { ... } } })` configuration.
 
 ---
 
 ## Commands
 
+- `:OrgShowCheatsheet` - Open interactive floating cheatsheet with live active keybindings.
 - `:OrgAgenda` - Open interactive agenda view.
 - `:OrgCapture` - Prompt and append note to refile file.
 - `:OrgOpenNotes` - Open default notes file in buffer.
@@ -128,6 +137,14 @@ Full Emacs Org Mode for Neovim written from scratch in pure, idiomatic Lua.
 - `:OrgAddNote` - Prompt and add note to current headline LOGBOOK drawer.
 - `:OrgToggleInlineNotes` - Toggle inline virtual text for headline notes.
 - `:OrgBack` - Return to previous location in jump stack.
+- `:OrgTodo` - Cycle TODO state forward.
+- `:OrgTodoPrev` - Cycle TODO state backward.
+- `:OrgTodoPrompt` - Fast interactive TODO state picker.
+- `:OrgPriority` - Set or prompt priority picker.
+- `:OrgCycle` - Cycle fold for subtree under cursor.
+- `:OrgGlobalCycle` - Cycle global folds between overview, contents, and all.
+- `:OrgOpenAtPoint` - Open link under cursor or recalculate table formula.
+- `:OrgToggleCheckbox` - Toggle checkbox under cursor.
 - `:OrgExecute` - Execute source block under cursor.
 - `:OrgTangle` - Extract code blocks to configured tangle files.
 - `:OrgTableAlign` - Format and align table under cursor.
@@ -136,8 +153,6 @@ Full Emacs Org Mode for Neovim written from scratch in pure, idiomatic Lua.
 - `:OrgClockOut` - Stop clock timer and log elapsed time.
 - `:OrgSchedule` - Set or edit scheduled date.
 - `:OrgDeadline` - Set or edit deadline date.
-- `:OrgTodoPrompt` - Fast interactive TODO state picker.
-- `:OrgPriority` - Set or prompt priority picker.
 
 ---
 

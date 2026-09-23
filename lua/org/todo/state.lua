@@ -289,4 +289,43 @@ function M.cycle(bufnr, headline_lnum)
 	end
 end
 
+--- Cycle TODO state backward for current headline.
+--- @param bufnr number|nil
+--- @param headline_lnum number|nil
+function M.cycle_backward(bufnr, headline_lnum)
+	bufnr = bufnr or vim.api.nvim_get_current_buf()
+	headline_lnum = headline_lnum or vim.fn.line(".")
+
+	local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+	local current_line = lines[headline_lnum]
+	if not current_line or not current_line:match("^(%*+)%s+") then
+		return
+	end
+
+	local target_lnum = headline_lnum
+	local line = lines[target_lnum]
+	local stars, rest = line:match("^(%*+)%s+(.*)$")
+	local first_word = rest:match("^(%S+)")
+	local states = M.get_buffer_states(bufnr)
+
+	local current_idx = 0
+	for idx, s in ipairs(states) do
+		if first_word == s.name then
+			current_idx = idx
+			break
+		end
+	end
+
+	local prev_state = nil
+	if current_idx == 0 then
+		prev_state = states[#states] and states[#states].name or nil
+	elseif current_idx == 1 then
+		prev_state = nil
+	else
+		prev_state = states[current_idx - 1].name
+	end
+
+	M.set_state(bufnr, target_lnum, prev_state)
+end
+
 return M

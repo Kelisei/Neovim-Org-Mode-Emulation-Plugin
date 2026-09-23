@@ -10,6 +10,7 @@ local Table = require("org.table")
 local Babel = require("org.babel")
 local Format = require("org.format")
 local Agenda = require("org.agenda")
+local Cheatsheet = require("org.cheatsheet")
 
 local M = {}
 
@@ -25,12 +26,13 @@ M.table = Table
 M.babel = Babel
 M.format = Format
 M.agenda = Agenda
+M.cheatsheet = Cheatsheet
 
 --- Setup buffer-local keymaps for active Org Mode buffer.
 --- @param bufnr number
 local function setup_buffer_mappings(bufnr)
 	local map = function(mode, lhs, rhs, desc)
-		if lhs and lhs ~= "" then
+		if type(lhs) == "string" and lhs ~= "" then
 			vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, silent = true, desc = desc })
 		end
 	end
@@ -96,6 +98,20 @@ local function setup_buffer_mappings(bufnr)
 		map("n", m.org_todo, Todo.cycle, "Cycle TODO State")
 	end
 
+	if m.org_todo_prev == "T" then
+		vim.keymap.set("n", m.org_todo_prev, function()
+			local cur = vim.api.nvim_get_current_line()
+			if cur:match("^(%*+)%s+") then
+				return "<cmd>lua require('org.todo').cycle_backward()<cr>"
+			else
+				return "T"
+			end
+		end, { expr = true, buffer = bufnr, silent = true, desc = "Cycle TODO State Backward (Headline) / Till Motion" })
+	else
+		map("n", m.org_todo_prev, Todo.cycle_backward, "Cycle TODO State Backward")
+	end
+
+	map("n", m.org_todo_prompt, Todo.prompt_state, "Prompt TODO State")
 	map("n", m.org_priority, Todo.priority_up, "Cycle Priority")
 	map("n", m.org_priority_prompt, Todo.prompt_priority, "Prompt Priority")
 	map("n", m.org_toggle_checkbox, handle_ctrl_c_ctrl_c, "Toggle Checkbox / Recalculate Table")
@@ -110,7 +126,14 @@ local function setup_buffer_mappings(bufnr)
 	map("n", m.org_babel_tangle, Babel.tangle_file, "Tangle Document Blocks")
 	map("n", m.org_schedule, Date.prompt_scheduled, "Set Scheduled Date")
 	map("n", m.org_deadline, Date.prompt_deadline, "Set Deadline Date")
+	map("n", m.org_clock_in, function()
+		Drawer.clock_in(0, vim.fn.line("."))
+	end, "Clock In Current Headline")
+	map("n", m.org_clock_out, function()
+		Drawer.clock_out(0, vim.fn.line("."))
+	end, "Clock Out Current Headline")
 	map("n", m.org_add_note, Drawer.add_note, "Add Headline Note")
+	map("n", m.org_show_cheatsheet, Cheatsheet.show_cheatsheet, "Show Org Cheatsheet")
 end
 
 --- Attach Org Mode features to an opened Org buffer.
@@ -192,6 +215,17 @@ local function register_commands()
 	safe_create_command("OrgToggleInlineNotes", function()
 		Format.toggle_inline_notes(0)
 	end, { desc = "Toggle inline notes virtual text" })
+	safe_create_command("OrgShowCheatsheet", Cheatsheet.show_cheatsheet, { desc = "Show Org Mode commands and keybindings cheatsheet" })
+	safe_create_command("OrgTodo", function()
+		Todo.cycle(0, vim.fn.line("."))
+	end, { desc = "Cycle TODO state forward" })
+	safe_create_command("OrgTodoPrev", function()
+		Todo.cycle_backward(0, vim.fn.line("."))
+	end, { desc = "Cycle TODO state backward" })
+	safe_create_command("OrgCycle", Fold.cycle, { desc = "Cycle subtree folding" })
+	safe_create_command("OrgGlobalCycle", Fold.global_cycle, { desc = "Cycle global buffer folding" })
+	safe_create_command("OrgOpenAtPoint", Link.open_at_point, { desc = "Follow link under cursor or recalculate formula" })
+	safe_create_command("OrgToggleCheckbox", List.toggle_checkbox, { desc = "Toggle checkbox under cursor" })
 	safe_create_command("OrgPriority", function(opts)
 		local arg = opts.args ~= "" and opts.args or nil
 		if arg then
@@ -209,10 +243,14 @@ function M.setup(opts)
 	register_commands()
 
 	local gm = Config.options.mappings.global
-	if gm.org_agenda and gm.org_agenda ~= "" then
-		vim.keymap.set("n", gm.org_agenda, Agenda.open_agenda, { silent = true, desc = "Org Agenda" })
+	local gmap = function(mode, lhs, rhs, desc)
+		if type(lhs) == "string" and lhs ~= "" then
+			vim.keymap.set(mode, lhs, rhs, { silent = true, desc = desc })
+		end
 	end
-	if gm.org_capture and gm.org_capture ~= "" then
+
+	gmap("n", gm.org_agenda, Agenda.open_agenda, "Org Agenda")
+	if type(gm.org_capture) == "string" and gm.org_capture ~= "" then
 		vim.keymap.set("n", gm.org_capture, function()
 			Agenda.capture()
 		end, { silent = true, desc = "Org Capture" })
@@ -222,9 +260,9 @@ function M.setup(opts)
 			Agenda.capture(visual_text)
 		end, { silent = true, desc = "Org Capture with visual selection" })
 	end
-	if gm.org_open_notes and gm.org_open_notes ~= "" then
-		vim.keymap.set("n", gm.org_open_notes, Agenda.open_notes_file, { silent = true, desc = "Org Open Notes" })
-	end
+	gmap("n", gm.org_open_notes, Agenda.open_notes_file, "Org Open Notes")
+	gmap("n", gm.org_notes, Agenda.open_notes_view, "Org Captured Notes Viewer")
+	gmap("n", gm.org_show_cheatsheet, Cheatsheet.show_cheatsheet, "Org Show Cheatsheet")
 
 	local group = vim.api.nvim_create_augroup("OrgModeNvim", { clear = true })
 	vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {

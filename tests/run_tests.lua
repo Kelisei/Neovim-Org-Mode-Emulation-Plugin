@@ -8,6 +8,7 @@ local test_modules = {
 	"tests.test_links",
 	"tests.test_agenda",
 	"tests.test_validation",
+	"tests.test_cheatsheet",
 }
 
 local passed = 0

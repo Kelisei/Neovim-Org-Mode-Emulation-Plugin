@@ -100,6 +100,8 @@ local function setup_buffer_mappings(bufnr)
 	map("n", m.org_priority_prompt, Todo.prompt_priority, "Prompt Priority")
 	map("n", m.org_toggle_checkbox, handle_ctrl_c_ctrl_c, "Toggle Checkbox / Recalculate Table")
 	map("n", m.org_open_at_point, handle_open_at_point, "Open Link at Point / Recalculate Table")
+	map("n", m.org_link_back, Link.jump_back, "Jump Back to Previous Link Position")
+	map("n", m.org_toggle_inline_notes, Format.toggle_inline_notes, "Toggle Inline Notes")
 	map("n", m.org_table_eval_formula, Table.recalculate, "Eval Table Formula")
 	if m.org_table_eval_formula ~= "<leader>of" then
 		map("n", "<leader>of", Table.recalculate, "Eval Table Formula (Org Formula)")
@@ -118,6 +120,21 @@ function M.attach(bufnr)
 	Fold.attach(bufnr)
 	Format.apply_buffer_syntax(bufnr)
 	setup_buffer_mappings(bufnr)
+
+	if Format.is_inline_notes_enabled(bufnr) then
+		Format.render_inline_notes(bufnr)
+	end
+
+	local group = vim.api.nvim_create_augroup("OrgBufferEvents_" .. bufnr, { clear = true })
+	vim.api.nvim_create_autocmd({ "BufWritePost", "InsertLeave" }, {
+		group = group,
+		buffer = bufnr,
+		callback = function()
+			if Format.is_inline_notes_enabled(bufnr) then
+				Format.render_inline_notes(bufnr)
+			end
+		end,
+	})
 end
 
 M._registered_commands = {}
@@ -171,6 +188,10 @@ local function register_commands()
 	safe_create_command("OrgOpenNotes", Agenda.open_notes_file, { desc = "Open default Org notes file" })
 	safe_create_command("OrgNotes", Agenda.open_notes_view, { desc = "Open Org captured notes viewer" })
 	safe_create_command("OrgAddNote", Drawer.add_note, { desc = "Add note to headline LOGBOOK drawer" })
+	safe_create_command("OrgBack", Link.jump_back, { desc = "Jump back to previous link position" })
+	safe_create_command("OrgToggleInlineNotes", function()
+		Format.toggle_inline_notes(0)
+	end, { desc = "Toggle inline notes virtual text" })
 	safe_create_command("OrgPriority", function(opts)
 		local arg = opts.args ~= "" and opts.args or nil
 		if arg then

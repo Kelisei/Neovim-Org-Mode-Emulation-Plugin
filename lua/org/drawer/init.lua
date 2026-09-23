@@ -221,6 +221,10 @@ function M.add_note(bufnr, headline_lnum, note_text)
 			vim.api.nvim_buf_set_lines(bufnr, insert_pos, insert_pos, false, drawer)
 		end
 		DOM.invalidate(bufnr)
+		local Format = require("org.format")
+		if Format.is_inline_notes_enabled(bufnr) then
+			Format.render_inline_notes(bufnr)
+		end
 		vim.notify("Org: Note added to headline LOGBOOK", vim.log.levels.INFO)
 	end
 

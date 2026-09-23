@@ -33,8 +33,39 @@ function M.run()
 	local match_id = DOM.find_by_id(root, "uuid-999")
 	assert(match_id ~= nil, "DOM find_by_id failed")
 
+	vim.api.nvim_set_current_buf(bufnr)
+	vim.api.nvim_win_set_cursor(0, { 1, 0 })
+	Link._jump_stack = {}
+	Link.push_jump()
+	assert(#Link._jump_stack == 1, "Jump stack push failed")
+	vim.api.nvim_win_set_cursor(0, { 5, 0 })
+	local jumped = Link.jump_back()
+	assert(jumped == true, "Jump back failed")
+	local cur_pos = vim.api.nvim_win_get_cursor(0)
+	assert(cur_pos[1] == 1, "Jump back line mismatch")
+
+	local Format = require("org.format")
+	vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {
+		"* Sprint 1",
+		"  :LOGBOOK:",
+		"  - Note taken on [2026-09-23 Wed 11:52] \\\\",
+		"    Investigating memory usage",
+		"  :END:",
+	})
+	Format.render_inline_notes(bufnr)
+	local ns = vim.api.nvim_create_namespace("org_inline_notes")
+	local marks = vim.api.nvim_buf_get_extmarks(bufnr, ns, 0, -1, { details = true })
+	assert(#marks == 1, "Expected 1 extmark for inline note")
+	assert(marks[1][2] == 0, "Extmark line mismatch")
+	local virt_text = marks[1][4].virt_text[1][1]
+	assert(virt_text:find("Investigating memory usage"), "Virt text mismatch: " .. tostring(virt_text))
+
+	Format.clear_inline_notes(bufnr)
+	marks = vim.api.nvim_buf_get_extmarks(bufnr, ns, 0, -1, {})
+	assert(#marks == 0, "Expected extmarks cleared")
+
 	vim.api.nvim_buf_delete(bufnr, { force = true })
-	return true, "Link tests passed"
+	return true, "Link and inline note tests passed"
 end
 
 return M

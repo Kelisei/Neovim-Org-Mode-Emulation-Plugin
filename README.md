@@ -104,6 +104,8 @@ Full Emacs Org Mode for Neovim written from scratch in pure, idiomatic Lua.
 | `<leader>op` | Headline | Fast interactive priority picker |
 | `<C-c><C-c>` | Context | Toggle checkbox / Recalculate table formulas |
 | `<CR>` | Context | Follow link under cursor / Recalculate table on `#+TBLFM:` |
+| `<leader>ob` | Normal | Return to previous location after link jump (`:OrgBack`) |
+| `<leader>oi` | Normal | Toggle inline headline notes virtual text (`:OrgToggleInlineNotes`) |
 | `<Tab>` | Table | Jump to next cell and re-align table |
 | `<leader>tfe` / `<leader>of` | Table | Evaluate table formulas (`#+TBLFM:`) |
 | `<leader>oe` | Source Block | Execute code block (Org Babel) |
@@ -124,6 +126,8 @@ Full Emacs Org Mode for Neovim written from scratch in pure, idiomatic Lua.
 - `:OrgOpenNotes` - Open default notes file in buffer.
 - `:OrgNotes` - Open interactive captured notes viewer.
 - `:OrgAddNote` - Prompt and add note to current headline LOGBOOK drawer.
+- `:OrgToggleInlineNotes` - Toggle inline virtual text for headline notes.
+- `:OrgBack` - Return to previous location in jump stack.
 - `:OrgExecute` - Execute source block under cursor.
 - `:OrgTangle` - Extract code blocks to configured tangle files.
 - `:OrgTableAlign` - Format and align table under cursor.

@@ -78,11 +78,12 @@ Full Emacs Org Mode for Neovim written from scratch in pure, idiomatic Lua.
 ### Using lazy.nvim
 ```lua
 {
-  "francisco/org.nvim",
+  "Kelisei/Neovim-Org-Mode-Emulation-Plugin",
   ft = { "org" },
   keys = {
     { "<leader>oa", "<cmd>OrgAgenda<cr>", desc = "Org Agenda" },
     { "<leader>oc", "<cmd>OrgCapture<cr>", desc = "Org Capture" },
+    { "<leader>o?", "<cmd>OrgShowCheatsheet<cr>", desc = "Org Cheatsheet" },
   },
   opts = {
     org_agenda_files = { "~/orgfiles/**/*" },
@@ -168,4 +169,4 @@ nvim --headless -u NONE --cmd "set rtp+=." -l tests/run_tests.lua
 
 ## License
 
-MIT License.
+GNU General Public License v3.0 (GPL-3.0). See [LICENSE](LICENSE) for details.

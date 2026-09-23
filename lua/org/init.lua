@@ -74,35 +74,49 @@ function M.attach(bufnr)
 	setup_buffer_mappings(bufnr)
 end
 
+--- Register user command with duplicate warning.
+--- @param name string
+--- @param command any
+--- @param opts table
+local function safe_create_command(name, command, opts)
+	if vim.fn.exists(":" .. name) == 2 then
+		vim.notify(
+			string.format("org.nvim: User command :%s already exists and will be overwritten", name),
+			vim.log.levels.WARN
+		)
+	end
+	vim.api.nvim_create_user_command(name, command, opts)
+end
+
 --- Register user commands for interactive Org operations.
 local function register_commands()
-	vim.api.nvim_create_user_command("OrgAgenda", Agenda.open_agenda, { desc = "Open Org Agenda view" })
-	vim.api.nvim_create_user_command("OrgCapture", Agenda.capture, { desc = "Capture quick Org note" })
-	vim.api.nvim_create_user_command("OrgTangle", function()
+	safe_create_command("OrgAgenda", Agenda.open_agenda, { desc = "Open Org Agenda view" })
+	safe_create_command("OrgCapture", Agenda.capture, { desc = "Capture quick Org note" })
+	safe_create_command("OrgTangle", function()
 		Babel.tangle_file(0)
 	end, { desc = "Tangle Org source blocks" })
-	vim.api.nvim_create_user_command("OrgExecute", function()
+	safe_create_command("OrgExecute", function()
 		Babel.execute_at_point(0, vim.fn.line("."))
 	end, { desc = "Execute Org source block" })
-	vim.api.nvim_create_user_command("OrgTableAlign", function()
+	safe_create_command("OrgTableAlign", function()
 		Table.align(0, vim.fn.line("."))
 	end, { desc = "Align table under cursor" })
-	vim.api.nvim_create_user_command("OrgTableEval", function()
+	safe_create_command("OrgTableEval", function()
 		Table.recalculate(0, vim.fn.line("."))
 	end, { desc = "Recalculate table formulas" })
-	vim.api.nvim_create_user_command("OrgClockIn", function()
+	safe_create_command("OrgClockIn", function()
 		Drawer.clock_in(0, vim.fn.line("."))
 	end, { desc = "Clock in on current headline" })
-	vim.api.nvim_create_user_command("OrgClockOut", function()
+	safe_create_command("OrgClockOut", function()
 		Drawer.clock_out(0, vim.fn.line("."))
 	end, { desc = "Clock out on current headline" })
-	vim.api.nvim_create_user_command("OrgSchedule", function()
+	safe_create_command("OrgSchedule", function()
 		Date.prompt_scheduled(0, vim.fn.line("."))
 	end, { desc = "Set scheduled date on headline" })
-	vim.api.nvim_create_user_command("OrgDeadline", function()
+	safe_create_command("OrgDeadline", function()
 		Date.prompt_deadline(0, vim.fn.line("."))
 	end, { desc = "Set deadline date on headline" })
-	vim.api.nvim_create_user_command("OrgTodoPrompt", function()
+	safe_create_command("OrgTodoPrompt", function()
 		Todo.prompt_state(0, vim.fn.line("."))
 	end, { desc = "Prompt fast TODO selection" })
 end

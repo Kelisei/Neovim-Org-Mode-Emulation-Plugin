@@ -47,10 +47,71 @@ M.defaults = {
 
 M.options = vim.deepcopy(M.defaults)
 
---- Setup user options by merging with defaults.
+--- Normalize key sequence preserving letter case while lowering bracketed tags.
+--- @param key string
+--- @return string
+local function normalize_key(key)
+	if key:match("^<.*>$") then
+		return key:lower()
+	end
+	return key
+end
+
+--- Validate mappings and detect unintended key collisions.
+--- @param mappings table
+--- @return table<string, table<number, string>>
+function M.validate_mappings(mappings)
+	local collisions = {}
+	local registered = {}
+
+	local allowed_shared = {
+		["<tab>"] = { org_cycle = true, org_table_align = true },
+	}
+
+	local org_maps = mappings.org or {}
+	for action, key in pairs(org_maps) do
+		if key and key ~= "" then
+			local norm_key = normalize_key(key)
+			if not registered[norm_key] then
+				registered[norm_key] = {}
+			end
+			table.insert(registered[norm_key], action)
+		end
+	end
+
+	for key, actions in pairs(registered) do
+		if #actions > 1 then
+			local is_allowed = true
+			local allowed_set = allowed_shared[key]
+			if allowed_set then
+				for _, act in ipairs(actions) do
+					if not allowed_set[act] then
+						is_allowed = false
+						break
+					end
+				end
+			else
+				is_allowed = false
+			end
+
+			if not is_allowed then
+				collisions[key] = actions
+				vim.notify(
+					string.format("org.nvim: Keybinding collision detected for %q (actions: %s)", key, table.concat(actions, ", ")),
+					vim.log.levels.WARN
+				)
+			end
+		end
+	end
+
+	return collisions
+end
+
+--- Setup user options by merging with defaults and validating mappings.
 --- @param user_opts table|nil
 function M.setup(user_opts)
 	M.options = vim.tbl_deep_extend("force", vim.deepcopy(M.defaults), user_opts or {})
+	M.validate_mappings(M.options.mappings)
 	return M.options
 end
 

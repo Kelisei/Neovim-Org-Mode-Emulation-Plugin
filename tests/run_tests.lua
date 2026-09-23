@@ -7,6 +7,7 @@ local test_modules = {
 	"tests.test_repeater",
 	"tests.test_links",
 	"tests.test_agenda",
+	"tests.test_validation",
 }
 
 local passed = 0

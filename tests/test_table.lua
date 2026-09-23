@@ -31,6 +31,16 @@ function M.run()
 	assert(#aligned == #raw, "Aligned row count mismatch")
 	assert(widths[2] >= 12, "Column width calculation failed")
 
+	local prev = evaluated
+	for _ = 1, 3 do
+		local next_eval = Formula.evaluate_tblfm(prev, tblfm)
+		assert(#next_eval == #prev, "Idempotent row count mismatch")
+		for idx = 1, #next_eval do
+			assert(next_eval[idx] == prev[idx], "Table evaluation not idempotent on line " .. idx)
+		end
+		prev = next_eval
+	end
+
 	return true, "Table and formula tests passed"
 end
 

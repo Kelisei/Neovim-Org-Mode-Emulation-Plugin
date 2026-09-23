@@ -4,7 +4,7 @@ local M = {}
 --- @param line string
 --- @return boolean
 function M.is_separator(line)
-	return line:match("^%s*|%-[%-%+]*|?%s*$") ~= nil
+	return line:match("^%s*|[%-%+]+|?%s*$") ~= nil and line:find("%-") ~= nil
 end
 
 --- Extract cell strings from a table row line.
@@ -69,7 +69,7 @@ local function format_separator_row(widths)
 	for i = 1, #widths do
 		table.insert(parts, string.rep("-", widths[i] + 2))
 	end
-	return "|+" .. table.concat(parts, "+"):sub(2, -2) .. "+|"
+	return "|" .. table.concat(parts, "+") .. "|"
 end
 
 --- Re-align and format table lines with consistent column widths.
